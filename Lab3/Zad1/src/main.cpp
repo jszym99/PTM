@@ -31,7 +31,7 @@ bool twostate = false;
 int option = 0, poption = 0;
 bool CW = 0, CCW = 0, pCW = 0, pCCW = 0;
 
-int R = 255;
+int R = 0;
 int G = 0;
 int B = 0;
 
@@ -58,7 +58,7 @@ void Blink2()
 // Two-state and threshold controllers
 void Controllers()
 {
-    if (millis() >= (ptime3 + 1000))
+    if (millis() >= (ptime3 + 100))
     {
         // Read analog values
         photo = analogRead(A_PHOTO) * 5.0 / 1024;
@@ -83,6 +83,13 @@ void Controllers()
 
         if (!threshold && photo >= (pot + THRESHOLD))
             threshold = true;
+
+        lcd.setCursor(0,1);
+        lcd.print("TS: ");
+        lcd.print(twostate);
+        lcd.setCursor(10,1);
+        lcd.print("TH: ");
+        lcd.print(threshold);
 
         // Print controller states
         Serial.print("Two-state controller state:");
@@ -117,9 +124,17 @@ void RGB()
         if (R == 255 && G > 0 && B == 0)
             G--;
 
-        analogWrite(R_PIN, R);
-        analogWrite(G_PIN, G);
-        analogWrite(B_PIN, B);
+        analogWrite(R_PIN, 255-R);
+        analogWrite(G_PIN, 255-G);
+        analogWrite(B_PIN, 255-B);
+
+        lcd.setCursor(0,1);
+        lcd.print(R);
+        lcd.print(",");
+        lcd.print(G);
+        lcd.print(",");
+        lcd.print(B);
+        lcd.print(" ");
 
         // For debuging
         Serial.print(R);
@@ -141,45 +156,61 @@ void Temp()
         Serial.print("Temperature: ");
         Serial.println(temperature);
 
+        lcd.setCursor(0,1);
+        lcd.print("Temp:");
+        lcd.print(temperature);
+        lcd.print((char)223);
+        lcd.print("C ");
+
         // Green
         if (temperature <= 50)
         {
-            R = 1;
-            G = map(temperature, 0, 50, 1, 255);
-            B = 1;
+            R = 0;
+            G = map(temperature, 0, 50, 0, 255);
+            B = 0;
+            lcd.setCursor(12,1);
+            lcd.print("Cold");
         }
         // Blue
         else if (temperature > 50 && temperature <= 70)
         {
-            R = 1;
-            G = map(temperature, 50, 70, 255, 1);
-            B = map(temperature, 50, 70, 1, 255);
+            R = 0;
+            G = map(temperature, 50, 70, 255, 0);
+            B = map(temperature, 50, 70, 0, 255);
+            lcd.setCursor(12,1);
+            lcd.print("Warm");
         }
         // Violet
         else if (temperature > 70 && temperature <= 80)
         {
-            R = map(temperature, 70, 80, 1, 63);
-            G = 1;
+            R = map(temperature, 70, 80, 0, 63);
+            G = 0;
             B = 255;
+            lcd.setCursor(12,1);
+            lcd.print(" Hot");
         }
         // Yellow
         else if (temperature > 80 && temperature <= 90)
         {
             R = map(temperature, 80, 95, 63, 127);
-            G = map(temperature, 80, 90, 1, 255);
-            B = map(temperature, 80, 90, 255, 1);
+            G = map(temperature, 80, 90, 0, 255);
+            B = map(temperature, 80, 90, 255, 0);
+            lcd.setCursor(12,1);
+            lcd.print(" Hot");
         }
         // Red
         else if (temperature > 90 && temperature <= 100)
         {
             R = map(temperature, 90, 100, 127, 255);
-            G = map(temperature, 90, 100, 255, 1);
-            B = 1;
+            G = map(temperature, 90, 100, 255, 0);
+            B = 0;
+            lcd.setCursor(12,1);
+            lcd.print("Boil");
         }
 
-        analogWrite(R_PIN, R);
-        analogWrite(G_PIN, G);
-        analogWrite(B_PIN, B);
+        analogWrite(R_PIN, 255-R);
+        analogWrite(G_PIN, 255-G);
+        analogWrite(B_PIN, 255-B);
 
         // For debuging
         Serial.print(R);
@@ -214,14 +245,6 @@ void loop()
     // LED2 blinking
     Blink2();
 
-    // Controllers (with 100ms delay)
-    // Controllers();
-
-    // RGB "Rainbow"
-    // RGB();
-
-    // Temp();
-
     // Encoder reading
     if (millis() >= (ptime6 + 100))
     {
@@ -229,11 +252,11 @@ void loop()
         CCW = digitalRead(ENC_B);
 
         // Move up
-        if (CW && !pCW && !CCW && !pCCW && option < 2)
+        if (CW && !pCW && !CCW && !pCCW && option < 3)
             option++;
 
         // Move down
-        else if (!CW && !pCW && CCW && !pCCW && option > 0)
+        else if (!CW && !pCW && CCW && !pCCW && option > 1)
             option--;
 
         pCW = CW;
@@ -247,18 +270,15 @@ void loop()
     {
         switch (option)
         {
-        case 0:
+        case 1:
             lcd.clear();
             lcd.print("Controllers");
-            R = 0;
-            G = 0;
-            B = 0;
-            analogWrite(R_PIN, R);
-            analogWrite(G_PIN, G);
-            analogWrite(B_PIN, B);
+            analogWrite(R_PIN, 255);
+            analogWrite(G_PIN, 255);
+            analogWrite(B_PIN, 255);
             Controllers();
             break;
-        case 1:
+        case 2:
             lcd.clear();
             lcd.print("Rainbow");
             R = 255;
@@ -266,15 +286,16 @@ void loop()
             B = 0;
             RGB();
             break;
-        case 2:
+        case 3:
             lcd.clear();
-            lcd.print("Temperature");
+            lcd.print("Kettle");
             R = 0;
             G = 0;
             B = 0;
             Temp();
             break;
         default:
+            lcd.clear();
             break;
         }
         poption = option;
@@ -282,13 +303,13 @@ void loop()
 
     switch (option)
         {
-        case 0:
+        case 1:
             Controllers();
             break;
-        case 1:
+        case 2:
             RGB();
             break;
-        case 2:
+        case 3:
             Temp();
             break;
         default:
