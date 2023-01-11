@@ -246,7 +246,7 @@ void loop()
     Blink2();
 
     // Encoder reading
-    if (millis() >= (ptime6 + 100))
+    if (millis() >= (ptime6 + 10))
     {
         CW = digitalRead(ENC_A);
         CCW = digitalRead(ENC_B);

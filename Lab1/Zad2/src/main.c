@@ -18,23 +18,26 @@
 
  
 int main(){
+    // Input configuration
     DDRC = 0x10;
     PORTC = 0x0F;
 
+    // Output configuration
     DDRB = 0xFF;
     PORTB = 0x00;
 
-    int flag = 0;
-    int snakeFlag = 0;
-    int snake = 0b10000000;
-    int time = 0;
-    int n = 1;
-    int del = 500;
-    int rev = 1;
-    int prevSW2=0;
+    int flag = 0; // Bistabil switch flag
+    int snakeFlag = 0; // "snake" on/off flag
+    int snake = 0b10000000; // "snake" start position
+    int time = 0; // time counter for "delay"
+    int n = 1; // "snake" movement counter
+    int del = 500; // delay counter
+    int rev = 1; // "snake" direction flag
+    int prevSW2=0; // previous state of SW2
     
-    int OUT_MASK = 0x00000000;
+    int OUT_MASK = 0x00000000; // output pins mask
 
+    // Switch variables
     int SW1 = 0;
     int SW2 = 0;
     int SW3 = 0;
